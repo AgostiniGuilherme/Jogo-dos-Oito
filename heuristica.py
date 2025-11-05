@@ -5,7 +5,7 @@ from typing import List
 from estado_puzzle import EstadoPuzzle
 
 
-def distancia_manhattan(estado: List[int], estado_objetivo: List[int] = None) -> int:
+def distancia_manhattan(estado: List[int]) -> int:
     """
     Calcula a distância de Manhattan para um estado do puzzle.
     
@@ -14,13 +14,11 @@ def distancia_manhattan(estado: List[int], estado_objetivo: List[int] = None) ->
     
     Args:
         estado: Lista representando o tabuleiro atual
-        estado_objetivo: Estado objetivo (usa ESTADO_FINAL por padrão)
         
     Returns:
         Valor da heurística (soma das distâncias de Manhattan)
     """
-    if estado_objetivo is None:
-        estado_objetivo = EstadoPuzzle.ESTADO_FINAL
+    estado_objetivo = EstadoPuzzle.ESTADO_FINAL
     
     distancia_total = 0
     
@@ -45,7 +43,7 @@ def distancia_manhattan(estado: List[int], estado_objetivo: List[int] = None) ->
     return distancia_total
 
 
-def pecas_fora_do_lugar(estado: List[int], estado_objetivo: List[int] = None) -> int:
+def pecas_fora_do_lugar(estado: List[int]) -> int:
     """
     Conta quantas peças estão fora de lugar (sem contar o espaço vazio).
     
@@ -53,13 +51,11 @@ def pecas_fora_do_lugar(estado: List[int], estado_objetivo: List[int] = None) ->
     
     Args:
         estado: Lista representando o tabuleiro atual
-        estado_objetivo: Estado objetivo (usa ESTADO_FINAL por padrão)
         
     Returns:
         Número de peças fora de lugar
     """
-    if estado_objetivo is None:
-        estado_objetivo = EstadoPuzzle.ESTADO_FINAL
+    estado_objetivo = EstadoPuzzle.ESTADO_FINAL
     
     pecas_fora = 0
     for i, valor in enumerate(estado):

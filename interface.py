@@ -16,7 +16,7 @@ class InterfaceJogoOito:
     # Estado inicial conforme especificação
     ESTADO_INICIAL = [2, 0, 3, 1, 7, 4, 6, 8, 5]
     
-    # Estado final
+    # Estado final padrão (sempre o mesmo, ordenado)
     ESTADO_FINAL = [1, 2, 3, 8, 0, 4, 7, 6, 5]
     
     def __init__(self, root: tk.Tk):
@@ -73,14 +73,13 @@ class InterfaceJogoOito:
         frame_config = ttk.LabelFrame(frame_tabuleiro, text="Configurar Estado Inicial", padding="5")
         frame_config.grid(row=2, column=0, pady=(10, 0), sticky=(tk.W, tk.E))
         
+        # Estado inicial
         ttk.Label(frame_config, text="Estado:").grid(row=0, column=0, padx=5)
-        
-        # Campo para inserir estado (9 números separados por vírgula)
         self.entry_estado = ttk.Entry(frame_config, width=30, font=("Arial", 9))
         self.entry_estado.insert(0, ",".join(map(str, self.ESTADO_INICIAL)))
         self.entry_estado.grid(row=0, column=1, padx=5)
         
-        # Botão para aplicar estado customizado
+        # Botões
         btn_aplicar = ttk.Button(
             frame_config,
             text="Aplicar Estado",
@@ -88,7 +87,6 @@ class InterfaceJogoOito:
         )
         btn_aplicar.grid(row=0, column=2, padx=5)
         
-        # Botão para usar estado padrão
         btn_padrao = ttk.Button(
             frame_config,
             text="Usar Padrão",
@@ -218,28 +216,26 @@ class InterfaceJogoOito:
         if titulo:
             self.label_estado.config(text=titulo)
     
+    def _validar_estado(self, numeros: List[int]) -> bool:
+        """Valida se um estado é válido."""
+        if len(numeros) != 9:
+            return False
+        if set(numeros) != set(range(9)):
+            return False
+        return True
+    
     def _aplicar_estado_customizado(self):
         """Aplica um estado inicial customizado inserido pelo usuário."""
         try:
             texto = self.entry_estado.get().strip()
-            # Remove espaços e divide por vírgula
             numeros = [int(x.strip()) for x in texto.split(',')]
             
-            # Valida se tem 9 elementos
-            if len(numeros) != 9:
+            # Valida estado
+            if not self._validar_estado(numeros):
                 messagebox.showerror(
                     "Erro", 
-                    "O estado deve ter exatamente 9 números separados por vírgula.\n"
+                    "O estado deve ter exatamente 9 números (0-8) sem repetições.\n"
                     "Exemplo: 2,0,3,1,7,4,6,8,5"
-                )
-                return
-            
-            # Valida se contém números de 0 a 8
-            if set(numeros) != set(range(9)):
-                messagebox.showerror(
-                    "Erro",
-                    "O estado deve conter exatamente os números de 0 a 8,\n"
-                    "sem repetições. O 0 representa o espaço vazio."
                 )
                 return
             
@@ -249,13 +245,7 @@ class InterfaceJogoOito:
             self._atualizar_tabuleiro(self.estado_atual, "Estado Inicial Customizado")
             
             # Limpa resultados anteriores
-            self.resultado_busca = None
-            self.estados_animacao = []
-            self.indice_caminho_atual = 0
-            self.btn_anterior.config(state=tk.DISABLED)
-            self.btn_proximo.config(state=tk.DISABLED)
-            self.label_passo.config(text="Passo: 0 / 0")
-            self.texto_resultados.delete(1.0, tk.END)
+            self._limpar_resultados()
             
             messagebox.showinfo("Sucesso", "Estado inicial aplicado com sucesso!")
             
@@ -268,15 +258,8 @@ class InterfaceJogoOito:
         except Exception as e:
             messagebox.showerror("Erro", f"Erro ao aplicar estado: {str(e)}")
     
-    def _usar_estado_padrao(self):
-        """Restaura o estado inicial padrão."""
-        self.estado_atual = self.ESTADO_INICIAL[:]
-        self.jogo = JogoOito(self.estado_atual)
-        self.entry_estado.delete(0, tk.END)
-        self.entry_estado.insert(0, ",".join(map(str, self.ESTADO_INICIAL)))
-        self._atualizar_tabuleiro(self.estado_atual, "Estado Inicial (Padrão)")
-        
-        # Limpa resultados anteriores
+    def _limpar_resultados(self):
+        """Limpa os resultados da busca anterior."""
         self.resultado_busca = None
         self.estados_animacao = []
         self.indice_caminho_atual = 0
@@ -284,6 +267,18 @@ class InterfaceJogoOito:
         self.btn_proximo.config(state=tk.DISABLED)
         self.label_passo.config(text="Passo: 0 / 0")
         self.texto_resultados.delete(1.0, tk.END)
+    
+    def _usar_estado_padrao(self):
+        """Restaura o estado inicial padrão."""
+        self.estado_atual = self.ESTADO_INICIAL[:]
+        self.jogo = JogoOito(self.estado_atual)
+        
+        # Atualiza o campo de entrada
+        self.entry_estado.delete(0, tk.END)
+        self.entry_estado.insert(0, ",".join(map(str, self.ESTADO_INICIAL)))
+        
+        self._atualizar_tabuleiro(self.estado_atual, "Estado Inicial (Padrão)")
+        self._limpar_resultados()
     
     def _executar_busca(self):
         """Executa a busca selecionada."""
@@ -297,7 +292,6 @@ class InterfaceJogoOito:
             if metodo == "A*":
                 self.resultado_busca = buscar_solucao_a_estrela(self.estado_atual)
             else:  # Busca em Amplitude
-                from busca_amplitude import buscar_solucao_amplitude, imprimir_resultado
                 self.resultado_busca = buscar_solucao_amplitude(self.estado_atual)
             
             if self.resultado_busca.solucao_encontrada:
